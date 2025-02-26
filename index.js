@@ -1,10 +1,19 @@
 const express = require('express');
+const morgan = require('morgan');
 const app = express();
 const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// Enable body parsing for JSON requests
 app.use(express.json());
+
+// Define a custom token for the request body
+morgan.token('body', (req) => JSON.stringify(req.body));
+
+// Use Morgan middleware with the custom token
+app.use(morgan(':method :url :status - :response-time ms :body'));
 
 let list =
     [
@@ -61,7 +70,7 @@ app.delete('/api/persons/:id', (req, res) => {
 
 app.post('/api/persons', (req, res) => {
     const body = req.body
-    console.log(body)
+    //console.log(body)
     if (!body.name || !body.number) {
         return res.status(400).json({
             error: 'content missing'
