@@ -4,8 +4,9 @@ const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+app.use(express.json());
 
-const list =
+let list =
     [
         { 
         "id": "1",
@@ -31,4 +32,46 @@ const list =
 
 app.get('/api/persons', (req, res) => {
     res.json(list)
+})
+
+app.get('/info', (req, res) => {
+    res.send(
+        `
+        <p>Phonebook has info for ${list.length} people</p>
+        <p>${new Date()}</p>
+        `
+    )
+})
+
+app.get('/api/persons/:id', (req, res) => {
+    const id = req.params.id
+    const person = list.find(person => person.id === id)
+    if(person){
+        res.json(person)
+    } else {
+        res.status(404).end()
+    }
+})
+
+app.delete('/api/persons/:id', (req, res) => {
+    const id = req.params.id
+    list = list.filter(person => person.id !== id)
+    res.status(204).end()
+})
+
+app.post('/api/persons', (req, res) => {
+    const body = req.body
+    console.log(body)
+    if (!body.name || !body.number) {
+        return res.status(400).json({
+            error: 'content missing'
+        })
+    }
+    const person = {
+        name: body.name,
+        number: body.number,
+        id: Math.floor(Math.random() * 1000)
+    }
+    list = list.concat(person)
+    res.json(person)
 })
