@@ -1,5 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors');
+
 const app = express();
 const PORT = 3001;
 app.listen(PORT, () => {
@@ -8,6 +10,9 @@ app.listen(PORT, () => {
 
 // Enable body parsing for JSON requests
 app.use(express.json());
+
+// Enable CORS for all requests
+app.use(cors());
 
 // Define a custom token for the request body
 morgan.token('body', (req) => JSON.stringify(req.body));
