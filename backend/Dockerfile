@@ -32,10 +32,10 @@ RUN ls -al /app
 #RUN cat .env
 
 # Build the application
-RUN npm run build
+#RUN npm run build
 
 # Expose port 80
-EXPOSE 80
+EXPOSE 3001
 
 # Command to run the application
 CMD ["node", "index.js"]
