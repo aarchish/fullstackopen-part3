@@ -30,6 +30,7 @@ RUN ls -al /app
 # Echo environment variables for debugging
 #RUN echo "Environment Variables:"
 #RUN cat .env
+RUN echo VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Build the application
 RUN npm run build
