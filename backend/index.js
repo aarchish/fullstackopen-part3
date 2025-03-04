@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
@@ -18,13 +20,10 @@ app.use(express.json());
 app.use(cors());
 
 // Define a custom token for the request body
-morgan.token('body', (req) => JSON.stringify(req.body));
-
-// Define a custom token for the response body
-morgan.token('body', (res) => JSON.stringify(res.body));
+morgan.token('req', (req) => JSON.stringify(req.body));
 
 // Use Morgan middleware with the custom token
-app.use(morgan(':method :url :status - :response-time ms :body'));
+app.use(morgan(':method :url :status - :response-time ms :req'));
 
 app.get('/api/persons', (req, res) => {
     Person.find({}).then(persons => {
@@ -33,28 +32,41 @@ app.get('/api/persons', (req, res) => {
 })
 
 app.get('/info', (req, res) => {
-    res.send(
-        `
-        <p>Phonebook has info for ${list.length} people</p>
-        <p>${new Date()}</p>
-        `
-    )
+    Person.find({}).then(persons => {
+        let count = persons.length
+        res.send(
+            `
+            <p>Phonebook has info for ${count} people</p>
+            <p>${new Date()}</p>
+            `
+        )
+    })
 })
 
 app.get('/api/persons/:id', (req, res) => {
     const id = req.params.id
-    const person = list.find(person => person.id === id)
-    if(person){
-        res.json(person)
-    } else {
-        res.status(404).end()
-    }
+    Person.findById(id)
+        .then(person => {
+            if(person){
+                res.json(person)
+            } else {
+                res.status(404).end()
+            }
+        })
+        .catch(error => {
+            console.log(error)
+            response.status(400).send({ error: 'malformatted id' })
+        })
 })
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
     const id = req.params.id
-    list = list.filter(person => person.id !== id)
-    res.status(204).end()
+    Person
+        .findByIdAndDelete(id)
+        .then(result => {
+            res.status(204).end()
+        })
+        .catch(error => next(error))
 })
 
 app.post('/api/persons', (req, res) => {
@@ -68,8 +80,49 @@ app.post('/api/persons', (req, res) => {
     const person = {
         name: body.name,
         number: body.number,
-        id: Math.floor(Math.random() * 1000)
     }
-    list = list.concat(person)
-    res.json(person)
+    const newPerson = new Person(person)
+    newPerson.save()
+        .then(savedPerson => {
+        res.json(savedPerson)
+        })
+        .catch(error => {
+            res.status(500).end()
+        })
 })
+
+app.put('/api/persons/:id', (req, res, next) => {
+    const id = req.params.id
+    const body = req.body
+
+    const person = {
+        name: body.name,
+        number: body.number
+    }
+
+    Person
+        .findByIdAndUpdate(id, person, { new: true })
+        .then(updatedPerson => {
+            res.json(updatedPerson)
+        })
+        .catch(error => next(error))
+})
+
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+
+// Error handling middleware
+const errorHandler = (error, req, res, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return res.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error)
+}
+
+app.use(errorHandler)

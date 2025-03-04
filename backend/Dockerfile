@@ -10,7 +10,7 @@ RUN ls -al /app
 
 # Copy package.json and package-lock.json
 COPY ./package.json ./
-#COPY /package-lock.json /app
+COPY ./package-lock.json /app
 
 # List files to debug
 RUN ls -al /app
@@ -30,12 +30,17 @@ RUN ls -al /app
 # Echo environment variables for debugging
 #RUN echo "Environment Variables:"
 #RUN cat .env
+ARG MONGO_URI
+ARG PORT
+
+RUN echo "MONGO_URI: $MONGO_URI"
+RUN echo "PORT: $PORT"
 
 # Build the application
 #RUN npm run build
 
-# Expose port 80
-EXPOSE 3001
+# Expose service port
+EXPOSE ${PORT}
 
 # Command to run the application
 CMD ["node", "index.js"]
