@@ -2,8 +2,11 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 
+const Person = require('./models/person');
+
 const app = express();
-const PORT = 3001;
+
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
@@ -17,35 +20,16 @@ app.use(cors());
 // Define a custom token for the request body
 morgan.token('body', (req) => JSON.stringify(req.body));
 
+// Define a custom token for the response body
+morgan.token('body', (res) => JSON.stringify(res.body));
+
 // Use Morgan middleware with the custom token
 app.use(morgan(':method :url :status - :response-time ms :body'));
 
-let list =
-    [
-        { 
-        "id": "1",
-        "name": "Arto Hellas", 
-        "number": "040-123456"
-        },
-        { 
-        "id": "2",
-        "name": "Ada Lovelace", 
-        "number": "39-44-5323523"
-        },
-        { 
-        "id": "3",
-        "name": "Dan Abramov", 
-        "number": "12-43-234345"
-        },
-        { 
-        "id": "4",
-        "name": "Mary Poppendieck", 
-        "number": "39-23-6423122"
-        }
-    ]
-
 app.get('/api/persons', (req, res) => {
-    res.json(list)
+    Person.find({}).then(persons => {
+        res.json(persons)
+    })
 })
 
 app.get('/info', (req, res) => {
